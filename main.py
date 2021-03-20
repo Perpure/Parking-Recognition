@@ -2,17 +2,19 @@ from imageai.Detection import ObjectDetection
 import numpy as np
 import cv2
 import os
+import time
 
 execution_path = os.getcwd()
 
 def get_car_boxes(frame):
     car_boxes = []
-    detections = (detector.detectCustomObjectsFromImage(custom_objects=custom, input_type="array", input_image=np.array(frame), output_type="array", minimum_percentage_probability=25))[1]
+    detections = (detector.detectCustomObjectsFromImage(custom_objects=custom, input_type="array", input_image=np.array(frame), output_type="array", minimum_percentage_probability=20))[1]
 
     for eachObject in detections:
         car_boxes.append(eachObject["box_points"])
 
     return np.array(car_boxes)
+
 
 VIDEO_SOURCE = "test_images/parking1.mp4"
 
@@ -25,10 +27,18 @@ custom = detector.CustomObjects(bicycle=True, car=True, motorcycle=True, bus=Tru
 
 video_capture = cv2.VideoCapture(VIDEO_SOURCE)
 
+spf = 0
+
 while video_capture.isOpened():
     success, frame = video_capture.read()
     if not success:
         break
+
+    if spf > 0:
+        spf -= 1 / video_capture.get(cv2.CAP_PROP_FPS)
+        continue
+
+    t0 = time.time()
 
     rgb_image = frame[:, :, ::-1]
 
@@ -37,7 +47,7 @@ while video_capture.isOpened():
     '''
     #если понадобится выводить на экран обработанное изображение и информацию про каждый объект в консоль, то можно вместо вызова get_car_boxes вставить этот код
     
-    detections = detector.detectCustomObjectsFromImage(custom_objects=custom, input_type="array", input_image=np.array(rgb_image), output_type="array", minimum_percentage_probability=25)
+    detections = detector.detectCustomObjectsFromImage(custom_objects=custom, input_type="array", input_image=np.array(rgb_image), output_type="array", minimum_percentage_probability=20)
     cv2.imshow('Video', detections[0]) #перепутаны синий и красный каналы
 
     for eachObject in detections[1]:
@@ -46,6 +56,8 @@ while video_capture.isOpened():
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
     '''
+    spf = time.time() - t0
+    
 
 video_capture.release()
 cv2.destroyAllWindows()
