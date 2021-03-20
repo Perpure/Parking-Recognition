@@ -4,14 +4,14 @@ import mrcnn.config
 import mrcnn.utils
 from mrcnn.model import MaskRCNN
 from pathlib import Path
-
+from park_calc import cut_parking, PARKS_POLYGONS
 
 class MaskRCNNConfig(mrcnn.config.Config):
     NAME = "coco_pretrained_model_config"
     IMAGES_PER_GPU = 1
     GPU_COUNT = 1
     NUM_CLASSES = 1 + 80
-    DETECTION_MIN_CONFIDENCE = 0.6
+    DETECTION_MIN_CONFIDENCE = 0.25
 
 def get_car_boxes(boxes, class_ids):
     car_boxes = []
@@ -31,7 +31,7 @@ if not COCO_MODEL_PATH.exists():
     mrcnn.utils.download_trained_weights(COCO_MODEL_PATH)
 
 IMAGE_DIR = ROOT_DIR / "images"
-VIDEO_SOURCE = "test_images/parking3.mp4"
+VIDEO_SOURCE = "test_images/parking3.flv"
 
 model = MaskRCNN(mode="inference", model_dir=MODEL_DIR, config=MaskRCNNConfig())
 
@@ -56,22 +56,20 @@ while video_capture.isOpened():
         parked_car_boxes = get_car_boxes(r['rois'], r['class_ids'])
     else:
         car_boxes = get_car_boxes(r['rois'], r['class_ids'])
-
+        parked_cars = cut_parking(car_boxes, PARKS_POLYGONS[0])
         overlaps = mrcnn.utils.compute_overlaps(parked_car_boxes, car_boxes)
-
         for parking_area, overlap_areas in zip(parked_car_boxes, overlaps):
             max_IoU_overlap = np.max(overlap_areas)
 
             y1, x1, y2, x2 = parking_area
 
-            if max_IoU_overlap < 0.15:
-                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 3)
-            else:
-                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 1)
 
             font = cv2.FONT_HERSHEY_DUPLEX
             cv2.putText(frame, f"{max_IoU_overlap:0.2}", (x1 + 6, y2 - 6), font, 0.3, (255, 255, 255))
 
+        for car in parked_cars:
+            y1, x1, y2, x2 = parking_area
+            cv2.rectangle(frame, (x1, y1), (x2, y2), (255, 0, 0), 3)
         cv2.imshow('Video', frame)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
