@@ -1,43 +1,27 @@
+from imageai.Detection import ObjectDetection
 import numpy as np
 import cv2
-import mrcnn.config
-import mrcnn.utils
-from mrcnn.model import MaskRCNN
-from pathlib import Path
+import os
 
+execution_path = os.getcwd()
 
-class MaskRCNNConfig(mrcnn.config.Config):
-    NAME = "coco_pretrained_model_config"
-    IMAGES_PER_GPU = 1
-    GPU_COUNT = 1
-    NUM_CLASSES = 1 + 80
-    DETECTION_MIN_CONFIDENCE = 0.6
-
-def get_car_boxes(boxes, class_ids):
+def get_car_boxes(frame):
     car_boxes = []
+    detections = (detector.detectCustomObjectsFromImage(custom_objects=custom, input_type="array", input_image=np.array(frame), output_type="array", minimum_percentage_probability=25))[1]
 
-    for i, box in enumerate(boxes):
-        if class_ids[i] in [3, 8, 6]:
-            car_boxes.append(box)
+    for eachObject in detections:
+        car_boxes.append(eachObject["box_points"])
 
     return np.array(car_boxes)
 
+VIDEO_SOURCE = "test_images/parking1.mp4"
 
-ROOT_DIR = Path(".")
-MODEL_DIR = ROOT_DIR / "logs"
-COCO_MODEL_PATH = ROOT_DIR / "mask_rcnn_coco.h5"
+detector = ObjectDetection()
+detector.setModelTypeAsRetinaNet()
+detector.setModelPath( os.path.join(execution_path , "resnet50_coco_best_v2.1.0.h5"))
+detector.loadModel()
 
-if not COCO_MODEL_PATH.exists():
-    mrcnn.utils.download_trained_weights(COCO_MODEL_PATH)
-
-IMAGE_DIR = ROOT_DIR / "images"
-VIDEO_SOURCE = "test_images/parking3.mp4"
-
-model = MaskRCNN(mode="inference", model_dir=MODEL_DIR, config=MaskRCNNConfig())
-
-model.load_weights(COCO_MODEL_PATH.__str__(), by_name=True)
-
-parked_car_boxes = None
+custom = detector.CustomObjects(bicycle=True, car=True, motorcycle=True, bus=True, truck=True, boat=True, bear=True) #объекты, которые должна искать нейронка
 
 video_capture = cv2.VideoCapture(VIDEO_SOURCE)
 
@@ -48,35 +32,20 @@ while video_capture.isOpened():
 
     rgb_image = frame[:, :, ::-1]
 
-    results = model.detect([rgb_image], verbose=0)
+    car_boxes = get_car_boxes(rgb_image) #координаты коробок с машинами 
 
-    r = results[0]
+    '''
+    #если понадобится выводить на экран обработанное изображение и информацию про каждый объект в консоль, то можно вместо вызова get_car_boxes вставить этот код
+    
+    detections = detector.detectCustomObjectsFromImage(custom_objects=custom, input_type="array", input_image=np.array(rgb_image), output_type="array", minimum_percentage_probability=25)
+    cv2.imshow('Video', detections[0]) #перепутаны синий и красный каналы
 
-    if parked_car_boxes is None:
-        parked_car_boxes = get_car_boxes(r['rois'], r['class_ids'])
-    else:
-        car_boxes = get_car_boxes(r['rois'], r['class_ids'])
-
-        overlaps = mrcnn.utils.compute_overlaps(parked_car_boxes, car_boxes)
-
-        for parking_area, overlap_areas in zip(parked_car_boxes, overlaps):
-            max_IoU_overlap = np.max(overlap_areas)
-
-            y1, x1, y2, x2 = parking_area
-
-            if max_IoU_overlap < 0.15:
-                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 3)
-            else:
-                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 1)
-
-            font = cv2.FONT_HERSHEY_DUPLEX
-            cv2.putText(frame, f"{max_IoU_overlap:0.2}", (x1 + 6, y2 - 6), font, 0.3, (255, 255, 255))
-
-        cv2.imshow('Video', frame)
+    for eachObject in detections[1]:
+        print(eachObject["name"] , " : " , eachObject["percentage_probability"], " : ", eachObject["box_points"])
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
+    '''
 
-# Нажмите q, чтобы выйти
 video_capture.release()
 cv2.destroyAllWindows()
