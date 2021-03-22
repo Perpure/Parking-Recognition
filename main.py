@@ -1,6 +1,10 @@
+from imageai.Detection import ObjectDetection
+import numpy as np
 import cv2
-import time
 import os
+import time
+from park_calc import find_space, cut_parking
+import tensorflow as tf
 from flask import Flask, render_template, Response, request, flash, redirect, url_for, send_from_directory
 from werkzeug.utils import secure_filename
 
@@ -8,7 +12,7 @@ stream_url1 = "https://s2.moidom-stream.ru/s/public/0000010493.m3u8"  # парк
 stream_url2 = "https://s2.moidom-stream.ru/s/public/0000010491.m3u8"  # парковка на просп. Ленина
 
 UPLOAD_FOLDER = '/sources/'
-ALLOWED_EXTENSIONS = {'flv', 'avi', 'mkv'}
+ALLOWED_EXTENSIONS = {'flv', 'avi', 'mkv', 'mp4'}
 
 app = Flask('parking-recognition', template_folder="templates")
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -59,22 +63,71 @@ def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'],
                                filename)
 
+def get_car_boxes(frame):
+    car_boxes = []
+    detections = (detector.detectCustomObjectsFromImage(custom_objects=custom, input_type="array", input_image=np.array(frame), output_type="array", minimum_percentage_probability=18))[1]
 
-def gen(url):
+    for eachObject in detections:
+        car_boxes.append(eachObject["box_points"])
+
+    return np.array(car_boxes)
+
+def gen(VIDEO_SOURCE):
     """Video streaming function"""
-    cap = cv2.VideoCapture(url)
 
-    while cap.isOpened():
-        ret, img = cap.read()
-        if ret:
-            img = cv2.resize(img, (0, 0), fx=1.0, fy=1.0)
-            frame = cv2.imencode('.jpeg', img)[1].tobytes()
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-            time.sleep(0.01)
-        else:
+    video_capture = cv2.VideoCapture(VIDEO_SOURCE)
+
+    spf = 0
+    video_spf = 1 / 25 #узнать фпс видео - video_capture.get(cv2.CAP_PROP_FPS), но для потока возвращает 180000
+    prev_cars = []
+    change_counter = 0
+
+    while video_capture.isOpened():
+        success, frame = video_capture.read()
+        if not success:
             break
 
+        t0 = time.time()
+
+        if spf > video_spf:
+            if spf > video_spf * 2:
+                spf -= video_spf
+                continue
+
+            t0 -= spf - video_spf
+
+        elif video_spf > spf:
+            time.sleep(video_spf - spf)
+
+        rgb_image = frame[:, :, ::-1]
+
+        car_boxes = get_car_boxes(rgb_image)
+        car_boxes = cut_parking(car_boxes, 0)
+
+        if (prev_cars != []):
+            if (len(car_boxes) != len(prev_cars)):
+                if (change_counter < 2 / spf):  #cars updates within 2 sec
+                    change_counter += 1
+                    car_boxes = prev_cars
+                else:
+                    change_counter = 0
+            else:
+                change_counter = 0
+
+        if change_counter == 0:
+            prev_cars = car_boxes
+
+        spaces = find_space(car_boxes, 0)
+
+        for space in spaces:
+            x, y = space
+            cv2.rectangle(frame, (x - 25, y - 35), (x + 25, y + 35), (0, 255, 0), 3)
+
+        img = cv2.imencode('.jpeg', frame)[1].tobytes()
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + img + b'\r\n')
+
+        spf = time.time() - t0
 
 @app.route('/video_feed')
 def video_feed():
@@ -87,6 +140,17 @@ def video_feed2():
     return Response(gen(stream_url2),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
+physical_devices = tf.config.list_physical_devices('GPU') 
+tf.config.experimental.set_memory_growth(physical_devices[0], True)
+
+execution_path = os.getcwd()
+
+detector = ObjectDetection()
+detector.setModelTypeAsRetinaNet()
+detector.setModelPath(os.path.join(execution_path , "resnet50_coco_best_v2.1.0.h5"))
+detector.loadModel()
+
+custom = detector.CustomObjects(bicycle=True, car=True, motorcycle=True, bus=True, truck=True, boat=True) #объекты, которые должна искать нейронка
 
 if __name__ == '__main__':
     app.run(debug=True)
