@@ -3,6 +3,10 @@ import numpy as np
 import cv2
 import os
 import time
+import tensorflow as tf
+
+physical_devices = tf.config.list_physical_devices('GPU') 
+tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
 execution_path = os.getcwd()
 
@@ -28,17 +32,25 @@ custom = detector.CustomObjects(bicycle=True, car=True, motorcycle=True, bus=Tru
 video_capture = cv2.VideoCapture(VIDEO_SOURCE)
 
 spf = 0
+video_spf = 1 / video_capture.get(cv2.CAP_PROP_FPS)
 
 while video_capture.isOpened():
     success, frame = video_capture.read()
     if not success:
         break
 
-    if spf > 0:
-        spf -= 1 / video_capture.get(cv2.CAP_PROP_FPS)
-        continue
-
     t0 = time.time()
+
+    if spf > video_spf:
+        if spf > video_spf * 2:
+            spf -= video_spf
+            print("skip")
+            continue
+
+        t0 -= spf - video_spf
+
+    elif video_spf > spf:
+        time.sleep(video_spf - spf)
 
     rgb_image = frame[:, :, ::-1]
 
@@ -49,13 +61,13 @@ while video_capture.isOpened():
     
     detections = detector.detectCustomObjectsFromImage(custom_objects=custom, input_type="array", input_image=np.array(rgb_image), output_type="array", minimum_percentage_probability=20)
     cv2.imshow('Video', detections[0]) #перепутаны синий и красный каналы
+    #for eachObject in detections[1]:
+    #    print(eachObject["name"] , " : " , eachObject["percentage_probability"], " : ", eachObject["box_points"])
 
-    for eachObject in detections[1]:
-        print(eachObject["name"] , " : " , eachObject["percentage_probability"], " : ", eachObject["box_points"])
-
+    '''
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
-    '''
+
     spf = time.time() - t0
     
 
