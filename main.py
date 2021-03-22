@@ -55,6 +55,16 @@ def upload_video():
     return render_template("upload.html")
 
 
+def get_car_boxes(frame):
+    car_boxes = []
+    detections = (detector.detectCustomObjectsFromImage(custom_objects=custom, input_type="array", input_image=np.array(frame), output_type="array", minimum_percentage_probability=18))[1]
+
+    for eachObject in detections:
+        car_boxes.append(eachObject["box_points"])
+
+    return np.array(car_boxes)
+
+
 def gen(VIDEO_SOURCE):
     """Video streaming function"""
 
