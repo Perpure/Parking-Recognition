@@ -4,6 +4,10 @@ import cv2
 import os
 import time
 from park_calc import find_space, cut_parking
+import tensorflow as tf
+
+physical_devices = tf.config.list_physical_devices('GPU') 
+tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
 execution_path = os.getcwd()
 
@@ -18,18 +22,19 @@ def get_car_boxes(frame):
     return np.array(car_boxes)
 
 
-VIDEO_SOURCE = "test_images/parking1.flv"
+VIDEO_SOURCE = "test_images/parking.mp4"
 
 detector = ObjectDetection()
 detector.setModelTypeAsRetinaNet()
 detector.setModelPath( os.path.join(execution_path , "resnet50_coco_best_v2.1.0.h5"))
 detector.loadModel()
 
-custom = detector.CustomObjects(bicycle=True, car=True, motorcycle=True, bus=True, truck=True, boat=True, bear=False) #объекты, которые должна искать нейронка
+custom = detector.CustomObjects(bicycle=True, car=True, motorcycle=True, bus=True, truck=True, boat=True) #объекты, которые должна искать нейронка
 
 video_capture = cv2.VideoCapture(VIDEO_SOURCE)
 
 spf = 0
+video_spf = 1 / video_capture.get(cv2.CAP_PROP_FPS)
 prev_cars = []
 change_counter = 0
 
@@ -38,11 +43,17 @@ while video_capture.isOpened():
     if not success:
         break
 
-    if spf > 0:
-        spf -= 1 / video_capture.get(cv2.CAP_PROP_FPS)
-        continue
-
     t0 = time.time()
+
+    if spf > video_spf:
+        if spf > video_spf * 2:
+            spf -= video_spf
+            continue
+
+        t0 -= spf - video_spf
+
+    elif video_spf > spf:
+        time.sleep(video_spf - spf)
 
     rgb_image = frame[:, :, ::-1]
 
@@ -85,7 +96,7 @@ while video_capture.isOpened():
     """
 
 
-    cv2.imshow('Video', frame) #перепутаны синий и красный каналы
+    cv2.imshow('Video', frame)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
