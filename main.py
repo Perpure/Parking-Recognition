@@ -22,7 +22,7 @@ def get_car_boxes(frame):
     return np.array(car_boxes)
 
 
-VIDEO_SOURCE = "test_images/parking.mp4"
+VIDEO_SOURCE = "test_images/parking4.mp4"
 
 detector = ObjectDetection()
 detector.setModelTypeAsRetinaNet()
@@ -70,7 +70,7 @@ while video_capture.isOpened():
 
     if (prev_cars != []):
         if (len(car_boxes) != len(prev_cars)):
-            if (change_counter < 3):  #cars updates within 3 frames
+            if (change_counter < 2 / spf):  #cars updates within 2 sec
                 change_counter += 1
                 car_boxes = prev_cars
             else:
