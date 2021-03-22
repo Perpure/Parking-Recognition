@@ -1,6 +1,8 @@
-from flask import Flask, render_template, Response
 import cv2
+import imutils
 import time
+from flask import Flask, render_template, Response, request
+
 app = Flask('parking-recognition', template_folder="templates")
 
 
@@ -12,7 +14,7 @@ def start():
 
 def gen():
     """Video streaming function"""
-    cap = cv2.VideoCapture("")
+    cap = cv2.VideoCapture("https://s2.moidom-stream.ru/s/public/0000010491.m3u8")
     # img = cv2.imread("sources/parking-picture.jpeg")
 
     while cap.isOpened():
@@ -22,7 +24,7 @@ def gen():
             frame = cv2.imencode('.jpeg', img)[1].tobytes()
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-            time.sleep(0.1)
+            time.sleep(0.01)
         else:
             break
 
