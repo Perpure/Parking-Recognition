@@ -65,10 +65,10 @@ def cut_parking(cars, id):
 def find_space_between_cars(d1, d2, delta):
     x, y = d1
     xf, yf = d2
-    if (x > 907):
-        delta += 4
+    if (x > 900):
+        delta += 15
     else:
-        delta -= 2 # because of perspective
+        delta += 2 # because of perspective
 
     spaces = np.empty(shape=[0, 2], dtype=int)
     if (xf < x):
@@ -81,6 +81,11 @@ def find_space_between_cars(d1, d2, delta):
 
     if n == 0:
         return spaces
+
+    if n > 6:
+        delta += 5
+        n = int(dist//delta)
+
     step = dist / n / 2
     buf = np.empty(shape=[1, 2], dtype=int)
     for _ in range(n):
@@ -93,12 +98,13 @@ def find_space_between_cars(d1, d2, delta):
     return spaces
 
 def find_space(cars, id):
-    if len(cars) == 0:
-        return []
     park = PARKS[id]
     delta = PIX_PER_CAR[id]
     spaces = np.empty(shape=[0, 2], dtype=int)
     x, y = park[0]
+    if len(cars) == 0:
+        xf, yf = park[2]
+        return find_space_between_cars((x, y - 20), (xf, yf + 40), delta)
     car = cars[0, :]
     x1, y1, x2, y2 = car
     xf, yf = x1, y1 + (y2 - y1) / 2
