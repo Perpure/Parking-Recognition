@@ -30,6 +30,8 @@ custom = detector.CustomObjects(bicycle=True, car=True, motorcycle=True, bus=Tru
 video_capture = cv2.VideoCapture(VIDEO_SOURCE)
 
 spf = 0
+prev_cars = []
+change_counter = 0
 
 while video_capture.isOpened():
     success, frame = video_capture.read()
@@ -46,23 +48,42 @@ while video_capture.isOpened():
 
     car_boxes = get_car_boxes(rgb_image) #координаты коробок с машинами
 
+    """
     for car in car_boxes:
         x1, y1, x2, y2 = car
-        cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 1)
+        cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 1)
+    """
 
     car_boxes = cut_parking(car_boxes, 0)
-    spaces = find_space(car_boxes, 0)
-    for space in spaces:
 
+
+    if (prev_cars != []):
+        if (len(car_boxes) != len(prev_cars)):
+            if (change_counter < 3):  #cars updates within 3 frames
+                change_counter += 1
+                car_boxes = prev_cars
+            else:
+                change_counter = 0
+        else:
+            change_counter = 0
+
+    if change_counter == 0:
+        prev_cars = car_boxes
+
+    spaces = find_space(car_boxes, 0)
+
+    for space in spaces:
         x, y = space
-        cv2.rectangle(frame, (x, y), (x, y), (0, 0, 255), 20)
+        cv2.rectangle(frame, (x - 25, y - 35), (x + 25, y + 35), (0, 255, 0), 3)
 
     #если понадобится выводить на экран обработанное изображение и информацию про каждый объект в консоль, то можно вместо вызова get_car_boxes вставить этот код
 
-    print(car_boxes)
+    """
     for car in car_boxes:
         x1, y1, x2, y2 = car
         cv2.rectangle(frame, (x1, y1), (x2, y2), (255, 0, 0), 3)
+    """
+
 
     cv2.imshow('Video', frame) #перепутаны синий и красный каналы
 
