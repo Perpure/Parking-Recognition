@@ -3,12 +3,13 @@ import time
 import os
 from flask import Flask, render_template, Response, request, flash, redirect, url_for, send_from_directory
 from werkzeug.utils import secure_filename
+from markupsafe import escape
 
 stream_url1 = "https://s2.moidom-stream.ru/s/public/0000010493.m3u8"  # парковка у жд вокзала
 stream_url2 = "https://s2.moidom-stream.ru/s/public/0000010491.m3u8"  # парковка на просп. Ленина
 
-UPLOAD_FOLDER = '/sources/'
-ALLOWED_EXTENSIONS = {'flv', 'avi', 'mkv'}
+UPLOAD_FOLDER = 'sources/'
+ALLOWED_EXTENSIONS = {'flv', 'avi', 'mkv', 'mp4'}
 
 app = Flask('parking-recognition', template_folder="templates")
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -39,25 +40,19 @@ def allowed_file(filename):
 
 @app.route("/upload_video", methods=["GET", "POST"])
 def upload_video():
-    if 'file' not in request.files:
-        flash('No file part')
-        return redirect(request.url)
-    file = request.files['file']
-    if file.filename == '':
-        flash('No selected file')
-        return redirect(request.url)
-    if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        return redirect(url_for('uploaded_file',
-                                filename=filename))
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            flash('No file part')
+            return redirect(request.url)
+        file = request.files['file']
+        if file.filename == '':
+            flash('No selected file')
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            return redirect(f'http://127.0.0.1:5000/process_video/{filename}')
     return render_template("upload.html")
-
-
-@app.route('/uploads/<filename>')
-def uploaded_file(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'],
-                               filename)
 
 
 def gen(url):
@@ -74,6 +69,12 @@ def gen(url):
             time.sleep(0.01)
         else:
             break
+
+
+@app.route('/process_video/<filename>')
+def run_video(filename):
+    return Response(gen(f'sources/{escape(filename)}'),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
 @app.route('/video_feed')
