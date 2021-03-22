@@ -55,20 +55,62 @@ def upload_video():
     return render_template("upload.html")
 
 
-def gen(url):
+def gen(VIDEO_SOURCE):
     """Video streaming function"""
-    cap = cv2.VideoCapture(url)
 
-    while cap.isOpened():
-        ret, img = cap.read()
-        if ret:
-            img = cv2.resize(img, (0, 0), fx=1.0, fy=1.0)
-            frame = cv2.imencode('.jpeg', img)[1].tobytes()
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-            time.sleep(0.01)
-        else:
+    video_capture = cv2.VideoCapture(VIDEO_SOURCE)
+
+    spf = 0
+    video_spf = 1 / 25 #узнать фпс видео - video_capture.get(cv2.CAP_PROP_FPS), но для потока возвращает 180000
+    prev_cars = []
+    change_counter = 0
+
+    while video_capture.isOpened():
+        success, frame = video_capture.read()
+        if not success:
             break
+
+        t0 = time.time()
+
+        if spf > video_spf:
+            if spf > video_spf * 2:
+                spf -= video_spf
+                continue
+
+            t0 -= spf - video_spf
+
+        elif video_spf > spf:
+            time.sleep(video_spf - spf)
+
+        rgb_image = frame[:, :, ::-1]
+
+        car_boxes = get_car_boxes(rgb_image)
+        car_boxes = cut_parking(car_boxes, 0)
+
+        if (prev_cars != []):
+            if (len(car_boxes) != len(prev_cars)):
+                if (change_counter < 2 / spf):  #cars updates within 2 sec
+                    change_counter += 1
+                    car_boxes = prev_cars
+                else:
+                    change_counter = 0
+            else:
+                change_counter = 0
+
+        if change_counter == 0:
+            prev_cars = car_boxes
+
+        spaces = find_space(car_boxes, 0)
+
+        for space in spaces:
+            x, y = space
+            cv2.rectangle(frame, (x - 25, y - 35), (x + 25, y + 35), (0, 255, 0), 3)
+
+        img = cv2.imencode('.jpeg', frame)[1].tobytes()
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + img + b'\r\n')
+
+        spf = time.time() - t0
 
 
 @app.route('/process_video/<filename>')
