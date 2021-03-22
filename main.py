@@ -11,7 +11,7 @@ from werkzeug.utils import secure_filename
 stream_url1 = "https://s2.moidom-stream.ru/s/public/0000010493.m3u8"  # парковка у жд вокзала
 stream_url2 = "https://s2.moidom-stream.ru/s/public/0000010491.m3u8"  # парковка на просп. Ленина
 
-UPLOAD_FOLDER = '/sources/'
+UPLOAD_FOLDER = 'sources/'
 ALLOWED_EXTENSIONS = {'flv', 'avi', 'mkv', 'mp4'}
 
 app = Flask('parking-recognition', template_folder="templates")
