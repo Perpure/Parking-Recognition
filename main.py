@@ -55,7 +55,7 @@ def upload_video():
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            return redirect(f'http://127.0.0.1:5000/process_video/{filename}')
+            return redirect(url_for('run_video', filename = filename))
     return render_template("upload.html")
 
 
