@@ -68,7 +68,7 @@ def get_car_boxes(frame):
 
     return np.array(car_boxes)
 
-def gen(VIDEO_SOURCE):
+def gen(VIDEO_SOURCE, PARK):
     """Video streaming function"""
 
     video_capture = cv2.VideoCapture(VIDEO_SOURCE)
@@ -77,6 +77,10 @@ def gen(VIDEO_SOURCE):
     video_spf = 1 / 25 #узнать фпс видео - video_capture.get(cv2.CAP_PROP_FPS), но для потока возвращает 180000
     prev_cars = []
     change_counter = 0
+
+    success, frame = video_capture.read()
+    if success:
+        get_car_boxes(frame) #используем первый кадр, для того, чтобы все нужные библиотеки загрузились до обработки видео
 
     while video_capture.isOpened():
         success, frame = video_capture.read()
@@ -98,7 +102,7 @@ def gen(VIDEO_SOURCE):
         rgb_image = frame[:, :, ::-1]
 
         car_boxes = get_car_boxes(rgb_image)
-        car_boxes = cut_parking(car_boxes, 0)
+        car_boxes = cut_parking(car_boxes, PARK)
 
         if (prev_cars != []):
             if (len(car_boxes) != len(prev_cars)):
@@ -113,7 +117,7 @@ def gen(VIDEO_SOURCE):
         if change_counter == 0:
             prev_cars = car_boxes
 
-        spaces = find_space(car_boxes, 0)
+        spaces = find_space(car_boxes, PARK)
 
         for space in spaces:
             x, y = space
@@ -128,19 +132,19 @@ def gen(VIDEO_SOURCE):
         
 @app.route('/process_video/<filename>')
 def run_video(filename):
-    return Response(gen(f'sources/{escape(filename)}'),
+    return Response(gen(f'sources/{escape(filename)}', 0), #пока что поддерживаются только видео парковки на просп. Ленина
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
 @app.route('/video_feed')
 def video_feed():
-    return Response(gen(stream_url1),
+    return Response(gen(stream_url1, 1),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
 @app.route('/video_feed2')
 def video_feed2():
-    return Response(gen(stream_url2),
+    return Response(gen(stream_url2, 0),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
@@ -157,4 +161,4 @@ detector.loadModel()
 custom = detector.CustomObjects(bicycle=True, car=True, motorcycle=True, bus=True, truck=True, boat=True) #объекты, которые должна искать нейронка
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
