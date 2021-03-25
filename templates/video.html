@@ -1,11 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Parking Recognition</title>
+	<meta charset="utf-8">
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
 </head>
 <body>
-    <h1>Загруженное видео</h1>
+    <nav class="navbar navbar-expand-lg fixed-top navbar-dark nav-pills" id="mainnav" role="navigation" style="background-color: #381336;">
+        <div class="container">
+            <a class="navbar-brand" href="/"><strong>/or/null</strong></a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                <ul class="navbar-nav justify-content-end nav-pills">
+                    <li class="nav-item "><a class="nav-link text-white" href="/stream1">Парковка у ЖД вокзала</a></li>
+                    <li class="nav-item "><a class="nav-link text-white" href="/stream2">Парковка на просп. Ленина</a></li>
+                    <li class="nav-item "><a class="nav-link text-white" href="/upload_video">Загрузить видео</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="jumbotron jumbotron-fluid">
+        <div class="row">
+            <div class="hidden-xs hidden-sm col-md-4 col-lg-3 pull-left">
+            </div>
+            <div class="col-xs-12 col-sm-12 col-md-8 col-lg-8">
+            <h1 class="display-4">Загруженное видео</h1>
+            <p class="lead">сейчас свободно n мест</p>
+            </div>
+        </div>
+    </div>
     <img src="{{ url_for('process_video/<filename>') }}">
 </body>
 </html>
