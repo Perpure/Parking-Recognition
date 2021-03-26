@@ -4,7 +4,7 @@ from shapely.geometry import Polygon
 PARKS = [[(527, 569), (592, 515), (1412, 701), (1537, 815)], #1
          [(200, 389), (263, 367), (884, 530), (802, 596)]] #2 left
 
-PIX_PER_CAR = [73]
+PIX_PER_CAR = [73, 36]
 
 PARKS_POLYGONS = [Polygon(x) for x in PARKS]
 
@@ -66,9 +66,9 @@ def find_space_between_cars(d1, d2, delta):
     x, y = d1
     xf, yf = d2
     if (x > 900):
-        delta += 5
+        delta += 4
     else:
-        delta += 2 # because of perspective
+        delta -= 7 # because of perspective
 
     spaces = np.empty(shape=[0, 2], dtype=int)
     if (xf < x):

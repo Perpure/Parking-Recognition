@@ -11,6 +11,7 @@ from markupsafe import escape
 
 stream_url1 = "https://s2.moidom-stream.ru/s/public/0000010493.m3u8"  # парковка у жд вокзала
 stream_url2 = "https://s2.moidom-stream.ru/s/public/0000010491.m3u8"  # парковка на просп. Ленина
+video_url = "sources/parking.mp4"
 
 UPLOAD_FOLDER = 'sources/'
 ALLOWED_EXTENSIONS = {'flv', 'avi', 'mkv', 'mp4'}
@@ -53,9 +54,9 @@ def upload_video():
             flash('No selected file')
             return redirect(request.url)
         if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            return redirect(url_for('run_video', filename = filename))
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], "parking.mp4"))
+            return render_template("video.html")
+            #return redirect(f'http://127.0.0.1:5000/process_video/{filename}')
     return render_template("upload.html")
 
 
@@ -104,9 +105,9 @@ def gen(VIDEO_SOURCE, PARK):
         car_boxes = get_car_boxes(rgb_image)
         car_boxes = cut_parking(car_boxes, PARK)
 
-        if (prev_cars != []):
+        if (len(prev_cars) != 0):
             if (len(car_boxes) != len(prev_cars)):
-                if (change_counter < 2 / spf):  #cars updates within 2 sec
+                if (change_counter < max(3 / spf, 3)):  #cars updates within 3 sec 
                     change_counter += 1
                     car_boxes = prev_cars
                 else:
@@ -123,6 +124,7 @@ def gen(VIDEO_SOURCE, PARK):
             x, y = space
             cv2.rectangle(frame, (x - 25, y - 35), (x + 25, y + 35), (0, 255, 0), 3)
 
+        frame = cv2.resize(frame, (0, 0), fx=0.8, fy=0.8)
         img = cv2.imencode('.jpeg', frame)[1].tobytes()
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + img + b'\r\n')
@@ -130,9 +132,9 @@ def gen(VIDEO_SOURCE, PARK):
         spf = time.time() - t0
 
         
-@app.route('/process_video/<filename>')
-def run_video(filename):
-    return Response(gen(f'sources/{escape(filename)}', 0), #пока что поддерживаются только видео парковки на просп. Ленина
+@app.route('/process_video')
+def run_video():
+    return Response(gen(video_url, 0), #пока что поддерживаются только видео парковки на просп. Ленина
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
@@ -148,8 +150,6 @@ def video_feed2():
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
-physical_devices = tf.config.list_physical_devices('GPU') 
-tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
 execution_path = os.getcwd()
 
