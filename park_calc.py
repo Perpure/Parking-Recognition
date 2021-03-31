@@ -2,9 +2,10 @@ import numpy as np
 from shapely.geometry import Polygon
 
 PARKS = [[(527, 569), (592, 515), (1412, 701), (1537, 815)], #1
-         [(200, 389), (263, 367), (884, 530), (802, 596)]] #2 left
+         [(200, 389), (263, 367), (884, 530), (802, 596)],   #2 left
+         [(385, 520), (450, 431), (1281, 641), (1301, 837)]] #3 near
 
-PIX_PER_CAR = [73, 36]
+PIX_PER_CAR = [73, 36, 80]
 
 PARKS_POLYGONS = [Polygon(x) for x in PARKS]
 
