@@ -130,6 +130,7 @@ def gen(VIDEO_SOURCE, PARK):
         for space in spaces:
             x, y = space
             cv2.rectangle(frame, (x - 25, y - 35), (x + 25, y + 35), (0, 255, 0), 3)
+
         frame = cv2.resize(frame, (0, 0), fx=0.8, fy=0.8)
         img = cv2.imencode('.jpeg', frame)[1].tobytes()
         yield (b'--frame\r\n'
