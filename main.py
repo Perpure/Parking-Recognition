@@ -11,6 +11,7 @@ from markupsafe import escape
 
 stream_url1 = "https://s2.moidom-stream.ru/s/public/0000010493.m3u8"  # парковка у жд вокзала
 stream_url2 = "https://s2.moidom-stream.ru/s/public/0000010491.m3u8"  # парковка на просп. Ленина
+stream_url3 = "https://s2.moidom-stream.ru/s/public/0000010495.m3u8"  # парковка на ул. Анохина
 video_url = "sources/parking.mp4"
 
 UPLOAD_FOLDER = 'sources/'
@@ -36,6 +37,12 @@ def main_page():
 def main_page2():
     """Livestream of the 2nd camera"""
     return render_template("index2.html")
+
+
+@app.route('/stream3')
+def main_page3():
+    """Livestream of the 3nd camera"""
+    return render_template("index3.html")
 
 
 def allowed_file(filename):
@@ -149,6 +156,11 @@ def video_feed2():
     return Response(gen(stream_url2, 0),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
+
+@app.route('/video_feed3')
+def video_feed3():
+    return Response(gen(stream_url3, 2),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
 execution_path = os.getcwd()
