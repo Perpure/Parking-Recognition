@@ -31,7 +31,7 @@ def notify(update, context):
     prev_spaces = 0
     id = 1
     while True:
-        time.sleep(20)
+        #time.sleep(20)
         fr = requests.get(os.path.join(PATH, 'get_frame1'))
         frame = fr.content
         file = open("sample_image.png", "wb")
