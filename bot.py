@@ -21,23 +21,19 @@ F_MESSAGE = "Приветствую, чтобы подписаться на ув
 def start(update, context):
     context.bot.send_message(chat_id=update.effective_chat.id, text=F_MESSAGE)
 
-def check_new_place():
-    global SEND_FLA
-    r = requests.get('/get_spaces1')
-    spaces = r.text
-    if spaces > PREV_SPACES and spaces > 0:
-        DATA_TO_SEND[0] = id
-        DATA_TO_SEND[1] = spaces
-        DATA_TO_SEND[2] = img
-        PREV_SPACES = spaces
-        SEND_FLA = True
-
 
 def notify(update, context):
+    prev_spaces = 0
+    id = 1
     while True:
-        global DATA_TO_SEND, SEND_FLA
-        if SEND_FLA:
-            id, spaces, frame = DATA_TO_SEND
+        r = requests.get('http://127.0.0.1:5000/get_spaces1')
+        spaces = int(r.text)
+        fr = requests.get('http://127.0.0.1:5000/get_frame1')
+        frame = fr.content
+        file = open("sample_image.png", "wb")
+        file.write(fr.content)
+        file.close()
+        if spaces > prev_spaces:
             loc = ''
             if id == 0:
                 loc = "возле ЖД вокзала"
@@ -46,8 +42,8 @@ def notify(update, context):
             message = "Освободилось новое парковочное место " + loc
             message += f"\nВсего свободных мест: {spaces}"
             context.bot.send_message(chat_id=update.effective_chat.id, text=message)
-            context.bot.send_photo(chat_id=update.effective_chat.id, photo=open(frame, 'rb'))
-            SEND_FLA = False
+            context.bot.send_photo(chat_id=update.effective_chat.id, photo=open('sample_image.png', 'rb'))
+            prev_spaces = spaces
 
 
 

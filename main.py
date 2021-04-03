@@ -9,12 +9,6 @@ from flask import Flask, render_template, Response, request, flash, redirect, ur
 from werkzeug.utils import secure_filename
 from markupsafe import escape
 from threading import Thread
-'''
-DATA_TO_SEND = [1, 0, 0] #id, spaces, frame
-SEND_FLA = True
-PREV_SPACES = 0
-from bot import *
-'''
 
 stream_url = ["https://s2.moidom-stream.ru/s/public/0000010491.m3u8"] #,"rtsp://93.190.206.140:8554/vokzal"]
 video_url = "sources/parking.mp4"
