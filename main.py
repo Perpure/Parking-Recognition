@@ -9,8 +9,8 @@ from flask import Flask, render_template, Response, request, flash, redirect, ur
 from werkzeug.utils import secure_filename
 from markupsafe import escape
 
-stream_url1 = "https://s2.moidom-stream.ru/s/public/0000010493.m3u8"  # парковка у жд вокзала
-stream_url2 = "https://s2.moidom-stream.ru/s/public/0000010491.m3u8"  # парковка на просп. Ленина
+stream_url1 = "rtsp://93.190.206.140:8554/vokzal"  # парковка у жд вокзала
+stream_url2 = "rtsp://93.190.206.140:8554/lenina"  # парковка на просп. Ленина
 video_url = "sources/parking.mp4"
 
 UPLOAD_FOLDER = 'sources/'
@@ -23,8 +23,9 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 @app.route('/')
 def start():
     """Home page"""
-    return render_template("home.html")
-
+    park_urls = [url_for('main_page'), url_for('main_page2')]
+    print(park_urls)
+    return render_template("home.html", park_urls=park_urls)
 
 @app.route('/stream1')
 def main_page():
@@ -107,7 +108,7 @@ def gen(VIDEO_SOURCE, PARK):
 
         if (len(prev_cars) != 0):
             if (len(car_boxes) != len(prev_cars)):
-                if (change_counter < max(3 / spf, 3)):  #cars updates within 3 sec 
+                if (change_counter < max(3 / spf, 3)):  #cars updates within 3 sec
                     change_counter += 1
                     car_boxes = prev_cars
                 else:
@@ -131,7 +132,7 @@ def gen(VIDEO_SOURCE, PARK):
 
         spf = time.time() - t0
 
-        
+
 @app.route('/process_video')
 def run_video():
     return Response(gen(video_url, 0), #пока что поддерживаются только видео парковки на просп. Ленина
