@@ -128,20 +128,21 @@ def gen(id):
             car_boxes = get_car_boxes(rgb_image)
             car_boxes = cut_parking(car_boxes, id)
 
+            spaces = find_space(car_boxes, id)
+            
+            
             if (len(prev_cars) != 0):
-                if (len(car_boxes) != len(prev_cars)):
+                if (len(spaces) != len(prev_cars)):
                     if (change_counter < max(4 / spf, 4)):  #cars updates within 4 sec
                         change_counter += 1
-                        car_boxes = prev_cars
+                        spaces = prev_cars
                     else:
                         change_counter = 0
                 else:
                     change_counter = 0
 
             if change_counter == 0:
-                prev_cars = car_boxes
-
-            spaces = find_space(car_boxes, id)
+                prev_cars = spaces
 
             for space in spaces:
                 x, y = space
