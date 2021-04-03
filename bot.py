@@ -36,7 +36,10 @@ def notify(update, context):
         file.write(fr.content)
         file.close()
         r = requests.get(os.path.join(PATH, 'get_spaces1'))
-        spaces = int(r.text)
+        try:
+          spaces = int(r.text)
+        except ValueError:
+          spaces = prev_spaces
         if spaces > prev_spaces:
             loc = ''
             if id == 0:
