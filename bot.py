@@ -1,14 +1,15 @@
 from telegram.ext import Updater
 from telegram.ext import CommandHandler
+import sys
 import logging
 import requests
-import telebot
+import os.path
 from threading import Thread
 SEND_FLA = False
 
 TOKEN = "1791644799:AAEdL0bdkPkJWfh2o0f8wvgrofi1cQs2KaY"
 LINK = "t.me/park_ornull_bot"
-
+PATH = sys.argv[1]
 updater = Updater(token=TOKEN, use_context=True)
 
 dispatcher = updater.dispatcher
@@ -26,9 +27,9 @@ def notify(update, context):
     prev_spaces = 0
     id = 1
     while True:
-        r = requests.get('http://127.0.0.1:5000/get_spaces1')
+        r = requests.get(os.path.join(PATH + '/get_spaces1'))
         spaces = int(r.text)
-        fr = requests.get('http://127.0.0.1:5000/get_frame1')
+        fr = requests.get(os.path.join(PATH + '/get_frame1'))
         frame = fr.content
         file = open("sample_image.png", "wb")
         file.write(fr.content)
@@ -38,7 +39,7 @@ def notify(update, context):
             if id == 0:
                 loc = "возле ЖД вокзала"
             elif id == 1:
-                loc = "на просп. Ленина"
+                loc = "на проспекте Ленина"
             message = "Освободилось новое парковочное место " + loc
             message += f"\nВсего свободных мест: {spaces}"
             context.bot.send_message(chat_id=update.effective_chat.id, text=message)
