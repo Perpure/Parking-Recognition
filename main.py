@@ -8,15 +8,17 @@ import tensorflow as tf
 from flask import Flask, render_template, Response, request, flash, redirect, url_for, send_from_directory
 from werkzeug.utils import secure_filename
 from markupsafe import escape
-from concurrent.futures import ThreadPoolExecutor
+from threading import Thread
 
 
-stream_url = ["https://s2.moidom-stream.ru/s/public/0000010491.m3u8"]#, "https://s2.moidom-stream.ru/s/public/0000010493.m3u8"]#, "https://s2.moidom-stream.ru/s/public/0000010495.m3u8"]
+stream_url = ["https://s2.moidom-stream.ru/s/public/0000010491.m3u8", "https://s2.moidom-stream.ru/s/public/0000010493.m3u8", "https://s2.moidom-stream.ru/s/public/0000010495.m3u8"]
 stream_url1 = "https://s2.moidom-stream.ru/s/public/0000010493.m3u8"  # парковка у жд вокзала
 stream_url2 = "https://s2.moidom-stream.ru/s/public/0000010491.m3u8"  # парковка на просп. Ленина
 stream_url3 = "https://s2.moidom-stream.ru/s/public/0000010495.m3u8"  # парковка на ул. Анохина
 video_url = "sources/parking.mp4"
 
+
+frame_read_mode = [False, False, False]
 frames = [None, None, None]
 
 UPLOAD_FOLDER = 'sources/'
@@ -81,28 +83,24 @@ def get_car_boxes(frame):
 
     return np.array(car_boxes)
 
-def gen():
+def gen(id):
     """Video streaming function"""
-
-    video_captures = [cv2.VideoCapture(x) for x in stream_url]
+    video = cv2.VideoCapture(stream_url[id])
 
     spf = 0
     video_spf = 1 / 25 #узнать фпс видео - video_capture.get(cv2.CAP_PROP_FPS), но для потока возвращает 180000
     prev_cars = []
     change_counter = 0
 
-    success, frame = video_captures[0].read()
+    success, frame = video.read()
     if success:
         get_car_boxes(frame) #используем первый кадр, для того, чтобы все нужные библиотеки загрузились до обработки видео
 
-    while video_captures[0].isOpened():
-
-
-        for video in video_captures:
+    counter = 0
+    while video.isOpened():
             success, frame = video.read()
-            if not success:
+            if (frame_read_mode[id]) or (not success):
                 continue
-
             t0 = time.time()
             if spf > video_spf:
                 if spf > video_spf * 2:
@@ -112,14 +110,15 @@ def gen():
             elif video_spf > spf:
                 time.sleep(video_spf - spf)
 
+
             rgb_image = frame[:, :, ::-1]
 
             car_boxes = get_car_boxes(rgb_image)
-            car_boxes = cut_parking(car_boxes, video_captures.index(video))
+            car_boxes = cut_parking(car_boxes, id)
 
             if (len(prev_cars) != 0):
                 if (len(car_boxes) != len(prev_cars)):
-                    if (change_counter < max(3 / spf, 3)):  #cars updates within 3 sec 
+                    if (change_counter < max(3 / spf, 3)):  #cars updates within 3 sec
                         change_counter += 1
                         car_boxes = prev_cars
                     else:
@@ -130,25 +129,27 @@ def gen():
             if change_counter == 0:
                 prev_cars = car_boxes
 
-            spaces = find_space(car_boxes, video_captures.index(video))
+            spaces = find_space(car_boxes, id)
 
             for space in spaces:
                 x, y = space
                 cv2.rectangle(frame, (x - 25, y - 35), (x + 25, y + 35), (0, 255, 0), 3)
 
             img = cv2.imencode('.jpeg', frame)[1].tobytes()
-            frames[video_captures.index(video)] = img
+            frames[id] = img
+            frame_read_mode[id] = True
             #yield (b'--frame\r\n'
             #       b'Content-Type: image/jpeg\r\n\r\n' + img + b'\r\n')
-            print(video_captures.index(video))
+
             spf = time.time() - t0
 
 def get_frame(cam):
     while True:
-        if frames[cam] != None:
+        if (frame_read_mode[cam]) and (frames[cam] != None):
+            frame_read_mode[cam] = False
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frames[cam] + b'\r\n')
-        
+
 @app.route('/process_video')
 def run_video():
     return Response(gen(), #пока что поддерживаются только видео парковки на просп. Ленина
@@ -182,9 +183,10 @@ detector.loadModel()
 
 custom = detector.CustomObjects(bicycle=True, car=True, motorcycle=True, bus=True, truck=True, boat=True) #объекты, которые должна искать нейронка
 
-pool = ThreadPoolExecutor(max_workers=2)
 
 if __name__ == '__main__':
-    pool.submit(gen)
-    pool.submit(app.run)
-
+    for i in range(1):
+        t = Thread(target=gen, args=[i])
+        t.start()
+        t.join()
+    app.run()
