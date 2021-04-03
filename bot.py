@@ -3,7 +3,7 @@ from telegram.ext import CommandHandler
 import logging
 import telebot
 from threading import Thread
-from main import DATA_TO_SEND
+from main import DATA_TO_SEND, SEND_FLA
 
 TOKEN = "1791644799:AAEdL0bdkPkJWfh2o0f8wvgrofi1cQs2KaY"
 LINK = "t.me/park_ornull_bot"
@@ -20,11 +20,12 @@ F_MESSAGE = "Приветствую, чтобы подписаться на ув
 def start(update, context):
     context.bot.send_message(chat_id=update.effective_chat.id, text=F_MESSAGE)
 
+
 def notify(update, context):
     while True:
-        global DATA_TO_SEND
-        if DATA_TO_SEND[3]:
-            id, spaces, frame, _ = DATA_TO_SEND
+        global DATA_TO_SEND, SEND_FLA
+        if SEND_FLA:
+            id, spaces, frame = DATA_TO_SEND
             loc = ''
             if id == 0:
                 loc = "возле ЖД вокзала"
@@ -34,8 +35,7 @@ def notify(update, context):
             message += f"\nВсего свободных мест: {spaces}"
             context.bot.send_message(chat_id=update.effective_chat.id, text=message)
             context.bot.send_photo(chat_id=update.effective_chat.id, photo=open(frame, 'rb'))
-            DATA_TO_SEND[3] = 0
-
+            SEND_FLA = False
 
 
 

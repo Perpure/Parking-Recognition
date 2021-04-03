@@ -1,5 +1,8 @@
 from threading import Thread
-DATA_TO_SEND = [1, 0, 0, 1] #id, spaces, frame, flag
+DATA_TO_SEND = [1, 0, 0] #id, spaces, frame, flag
+SEND_FLA = False
+PREV_SPACES = 0
+from bot import *
 
 from imageai.Detection import ObjectDetection
 import numpy as np
@@ -85,6 +88,7 @@ def get_car_boxes(frame):
 
 def gen(id):
     """Video streaming function"""
+    global PREV_SPACES, DATA_TO_SEND, SEND_FLA
     video = cv2.VideoCapture(stream_url[id])
 
     spf = 0
@@ -140,6 +144,13 @@ def gen(id):
             frame_read_mode[id] = True
             spf = time.time() - t0
 
+            #SEND
+            if len(spaces) < PREV_SPACES and len(spaces) != 0:
+                DATA_TO_SEND[0] = id
+                DATA_TO_SEND[1] = len(spaces)
+                DATA_TO_SEND[2] = img
+                SEND_FLA = 1
+
 def get_frame(cam):
     while True:
         print(frame_read_mode[cam])
@@ -183,4 +194,7 @@ if __name__ == '__main__':
     for i in range(1): #Работаем с одной парковкой
         t = Thread(target=gen, args=[i])
         t.start()
-    app.run()
+    tg = Thread(target=updater.start_polling, args=[])
+    tg.start()
+    a = Thread(target=app.run, args=[])
+    a.start()
