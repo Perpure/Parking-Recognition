@@ -15,6 +15,8 @@ video_url = "sources/parking.mp4"
 
 UPLOAD_FOLDER = 'sources/'
 ALLOWED_EXTENSIONS = {'flv', 'avi', 'mkv', 'mp4'}
+DATA_TO_SEND = [0, 0, 0]
+SEND_FLAG = True
 
 app = Flask('parking-recognition', template_folder="templates")
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
