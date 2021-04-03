@@ -5,7 +5,7 @@ import os
 import time
 from park_calc import find_space, cut_parking
 import tensorflow as tf
-from flask import Flask, render_template, Response, request, flash, redirect, url_for, send_from_directory
+from flask import Flask, render_template, Response, request, flash, redirect, url_for, send_from_directory, make_response
 from werkzeug.utils import secure_filename
 from markupsafe import escape
 from threading import Thread
@@ -42,6 +42,18 @@ def stream1():
     """Livestream of the 1st camera"""
     return render_template("stream1.html")
 
+@app.route('/get_spaces1')
+def get_spaces1():
+    response = make_response(str(free_parks[0]), 200)
+    response.mimetype = "text/plain"
+    return response
+
+
+@app.route('/get_frame1')
+def get_frame1():
+    response = make_response(read_frame(0), 200)
+    response.mimetype = "image/jpeg"
+    return response
 
 # @app.route('/stream2')
 # def stream2():
@@ -101,6 +113,7 @@ def gen(id):
 
     global frame_read_mode
     global frames
+    global free_parks
     while video.isOpened():
             success, frame = video.read()
             if not success:
@@ -115,7 +128,6 @@ def gen(id):
             elif video_spf > spf:
                 time.sleep(video_spf - spf)
 
-            print('processing')
             rgb_image = frame[:, :, ::-1]
 
             car_boxes = get_car_boxes(rgb_image)
@@ -145,22 +157,12 @@ def gen(id):
             frames[id] = img
             frame_read_mode[id] = True
             spf = time.time() - t0
-            print('processed')
-            '''
-            if len(spaces) > PREV_SPACES and len(spaces) > 0:
-                DATA_TO_SEND[0] = id
-                DATA_TO_SEND[1] = len(spaces)
-                DATA_TO_SEND[2] = img
-                PREV_SPACES = len(spaces)
-                SEND_FLA = 1
-            '''
 
 def read_frame(cam):
     while True:
         global frame_read_mode
         if (frame_read_mode[cam]) and (frames[cam] != None):
             frame_read_mode[cam] = False
-            print('readed')
             return frames[cam]
 
 def get_frame(cam):
