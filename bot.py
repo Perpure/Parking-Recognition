@@ -44,6 +44,7 @@ def notify(update, context):
             context.bot.send_message(chat_id=update.effective_chat.id, text=message)
             context.bot.send_photo(chat_id=update.effective_chat.id, photo=open('sample_image.png', 'rb'))
             prev_spaces = spaces
+        prev_spaces = spaces
 
 
 
