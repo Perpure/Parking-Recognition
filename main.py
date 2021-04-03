@@ -135,10 +135,6 @@ def gen(id):
             img = cv2.imencode('.jpeg', frame)[1].tobytes()
             frames[id] = img
             frame_read_mode[id] = True
-            print(frames[id])
-            #yield (b'--frame\r\n'
-            #       b'Content-Type: image/jpeg\r\n\r\n' + img + b'\r\n')
-
             spf = time.time() - t0
 
 def get_frame(cam):
@@ -146,7 +142,7 @@ def get_frame(cam):
         print(frame_read_mode[cam])
         if (frame_read_mode[cam]) and (frames[cam] != None):
             frame_read_mode[cam] = False
-            yield (b'--frame\r\n'
+            return (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frames[cam] + b'\r\n')
 
 @app.route('/process_video')
