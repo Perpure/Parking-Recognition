@@ -97,7 +97,7 @@ def gen(id):
     """Video streaming function"""
     video = cv2.VideoCapture(stream_url[id])
 
-    spf = 0
+    spf = 3
     video_spf = 1 / 25 #узнать фпс видео - video_capture.get(cv2.CAP_PROP_FPS), но для потока возвращает 180000
     prev_cars = []
     change_counter = 0
