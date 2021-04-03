@@ -1,9 +1,3 @@
-from threading import Thread
-DATA_TO_SEND = [1, 0, 0] #id, spaces, frame, flag
-SEND_FLA = False
-PREV_SPACES = 0
-from bot import *
-
 from imageai.Detection import ObjectDetection
 import numpy as np
 import cv2
@@ -16,7 +10,7 @@ from werkzeug.utils import secure_filename
 from markupsafe import escape
 from threading import Thread
 
-stream_url = ["rtsp://93.190.206.140:8554/lenina"] #,"rtsp://93.190.206.140:8554/vokzal"]
+stream_url = ["https://s2.moidom-stream.ru/s/public/0000010491.m3u8"] #,"rtsp://93.190.206.140:8554/vokzal"]
 video_url = "sources/parking.mp4"
 
 
@@ -88,7 +82,6 @@ def get_car_boxes(frame):
 
 def gen(id):
     """Video streaming function"""
-    global PREV_SPACES, DATA_TO_SEND, SEND_FLA
     video = cv2.VideoCapture(stream_url[id])
 
     spf = 0
@@ -100,10 +93,13 @@ def gen(id):
     if success:
         get_car_boxes(frame) #используем первый кадр, для того, чтобы все нужные библиотеки загрузились до обработки видео
 
+    global frame_read_mode
+    global frames
     while video.isOpened():
             success, frame = video.read()
-            if (frame_read_mode[id]) or (not success):
+            if not success:
                 continue
+
             t0 = time.time()
             if spf > video_spf:
                 if spf > video_spf * 2:
@@ -143,21 +139,21 @@ def gen(id):
             frames[id] = img
             frame_read_mode[id] = True
             spf = time.time() - t0
+            print('processed')
 
-            #SEND
-            if len(spaces) < PREV_SPACES and len(spaces) != 0:
-                DATA_TO_SEND[0] = id
-                DATA_TO_SEND[1] = len(spaces)
-                DATA_TO_SEND[2] = img
-                SEND_FLA = 1
+def read_frame(cam):
+    while True:
+        global frame_read_mode
+        if (frame_read_mode[cam]) and (frames[cam] != None):
+            frame_read_mode[cam] = False
+            print('readed')
+            return frames[cam]
 
 def get_frame(cam):
     while True:
-        print(frame_read_mode[cam])
-        if (frame_read_mode[cam]) and (frames[cam] != None):
-            frame_read_mode[cam] = False
-            return (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frames[cam] + b'\r\n')
+        frame = read_frame(cam)
+        yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
 @app.route('/process_video')
 def run_video():
@@ -194,7 +190,4 @@ if __name__ == '__main__':
     for i in range(1): #Работаем с одной парковкой
         t = Thread(target=gen, args=[i])
         t.start()
-    tg = Thread(target=updater.start_polling, args=[])
-    tg.start()
-    a = Thread(target=app.run, args=[])
-    a.start()
+    app.run()
