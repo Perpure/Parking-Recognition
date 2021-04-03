@@ -9,6 +9,12 @@ from flask import Flask, render_template, Response, request, flash, redirect, ur
 from werkzeug.utils import secure_filename
 from markupsafe import escape
 from threading import Thread
+'''
+DATA_TO_SEND = [1, 0, 0] #id, spaces, frame
+SEND_FLA = True
+PREV_SPACES = 0
+from bot import *
+'''
 
 stream_url = ["https://s2.moidom-stream.ru/s/public/0000010491.m3u8"] #,"rtsp://93.190.206.140:8554/vokzal"]
 video_url = "sources/parking.mp4"
@@ -140,6 +146,14 @@ def gen(id):
             frame_read_mode[id] = True
             spf = time.time() - t0
             print('processed')
+            '''
+            if len(spaces) > PREV_SPACES and len(spaces) > 0:
+                DATA_TO_SEND[0] = id
+                DATA_TO_SEND[1] = len(spaces)
+                DATA_TO_SEND[2] = img
+                PREV_SPACES = len(spaces)
+                SEND_FLA = 1
+            '''
 
 def read_frame(cam):
     while True:
