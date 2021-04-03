@@ -26,8 +26,8 @@
         	<div class="hidden-xs hidden-sm col-md-4 col-lg-4 pull-left">
         	</div>
         	<div class="col-xs-12 col-sm-12 col-md-8 col-lg-8">
-        	<h1 class="display-4">Можно что то написать...</h1>
-        	<p class="lead">Можно что то еще написать</p>
+        	<h1 class="display-4">Количество парковочных мест отображается в реальном времени</h1>
+        	<!--<p class="lead">Можно что то еще написать</p>-->
         	</div>
     	</div>
 	</div>
@@ -40,7 +40,23 @@
 		var parkUrls = ['{{ park_urls[0] }}']
 		var spaceUrls = ['{{ space_urls[0] }}']
 		var tags = ['']
+		var parks = [null]
 		ymaps.ready(init);
+
+		var refresher = setInterval(function() {
+			var x = new XMLHttpRequest();
+			x.open("GET", spaceUrls[0], false);
+			x.send()
+			if (x.status == 200) {
+				tags[0] = 'пр. Ленина (' + x.responseText + ')';
+			} else {
+				tags[0] = 'пр. Ленина';
+			}
+			if (parks[0] != null) {
+				parks[0].properties.set('iconContent', tags[0])
+			}
+
+		}, 1000);
 
 		function init() {
 		    var map = new ymaps.Map ('parkingMap', {
@@ -56,7 +72,8 @@
 				} else {
 					tags[0] = 'пр. Ленина';
 				}
-		    var park1 = new ymaps.Placemark([61.7896559,34.3619819], {
+
+		    parks[0] = new ymaps.Placemark([61.7896559,34.3619819], {
 		      iconContent: tags[0],
 		    }, {
 		      preset: 'islands#blueStretchyIcon'
@@ -67,8 +84,8 @@
 		      [61.7897659,34.3622313],
 		      [61.7895903,34.3616741]
 		    ]]);
-		    map.geoObjects.add(park1);
-		    park1.events.add('click', function(){
+		    map.geoObjects.add(parks[0]);
+		    parks[0].events.add('click', function(){
 		      window.location.replace(parkUrls[0]);
 		    });
 
