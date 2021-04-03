@@ -4,27 +4,27 @@
 	<meta charset="utf-8">
 	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <style>
-        #loader { 
-            position: relative; 
-            left: 50%; 
-            border: 4px solid #a5a3a4; 
-            border-top: 6px solid #1c2c36; 
-            border-radius: 50%; 
-            width: 60px; 
-            height: 60px; 
+        #loader {
+            position: relative;
+            left: 50%;
+            border: 4px solid #a5a3a4;
+            border-top: 6px solid #1c2c36;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
             animation: spin 1.3s linear infinite;
-            } 
-            
+            }
+
         @keyframes spin {
-            0% { transform: rotate(0deg); } 
-            100% { transform: rotate(360deg); } 
-        } 
-        
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         #video {
-            display: none; 
+            display: none;
             text-align: center;
         }
-    </style>
+        </style>
 </head>
 <body onload="myFunction()">
     <nav class="navbar navbar-expand-lg fixed-top navbar-dark nav-pills" id="mainnav" role="navigation" style="background-color: #381336;">
@@ -35,8 +35,8 @@
             </button>
             <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
                 <ul class="navbar-nav justify-content-end nav-pills">
-                    <li class="nav-item "><a class="nav-link text-white" href="/stream1">Парковка у ЖД вокзала</a></li>
-                    <li class="nav-item "><a class="nav-link text-white" href="/stream2">Парковка на просп. Ленина</a></li>
+									  <li class="nav-item "><a class="nav-link text-white" href="/stream1">Парковка на просп. Ленина</a></li>
+                    <li class="nav-item "><a class="nav-link text-white" href="/stream2">Парковка у ЖД вокзала</a></li>
                     <li class="nav-item "><a class="nav-link text-white" href="/stream3">Парковка на ул. Анохина</a></li>
                     <li class="nav-item "><a class="nav-link text-white" href="/upload_video">Загрузить видео</a></li>
                 </ul>
@@ -55,22 +55,23 @@
     </div>
     <div class="jumbotron jumbotron-fluid">
         <div id="loader"></div>
-        <div style="display:none;" id="video"><img src="{{ url_for('video_feed') }}", style="max-width: 90%; height: auto; border-radius: 10px; box-shadow: 0 0 10px #444;"/></div>
+        <div style="display:none;" id="video"><img src="{{ url_for('video_feed2') }}", style="max-width: 90%; height: auto; border-radius: 10px; box-shadow: 0 0 10px #444;"/></div>
     </div>
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
     <script>
         var myVar;
-        
+
         function myFunction() {
             myVar = setTimeout(showPage, 0);
         }
-        
+
         function showPage() {
           document.getElementById("loader").style.display = "none";
           document.getElementById("video").style.display = "block";
         }
     </script>
+
 </body>
 </html>

@@ -35,9 +35,9 @@
             </button>
             <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
                 <ul class="navbar-nav justify-content-end nav-pills">
-                    <li class="nav-item "><a class="nav-link text-white" href="/stream1">Парковка у ЖД вокзала</a></li>
-                    <li class="nav-item "><a class="nav-link text-white" href="/stream2">Парковка на просп. Ленина</a></li>
-                    <li class="nav-item "><a class="nav-link text-white" href="/stream3">Парковка на ул. Анохина</a></li>
+										<li class="nav-item "><a class="nav-link text-white" href="/stream1">Парковка на просп. Ленина</a></li>
+										<!--<li class="nav-item "><a class="nav-link text-white" href="/stream2">Парковка у ЖД вокзала</a></li>
+	                  <li class="nav-item "><a class="nav-link text-white" href="/stream3">Парковка на ул. Анохина</a></li>-->
                     <li class="nav-item "><a class="nav-link text-white" href="/upload_video">Загрузить видео</a></li>
                 </ul>
             </div>
@@ -48,14 +48,13 @@
             <div class="hidden-xs hidden-sm col-md-4 col-lg-3 pull-left">
             </div>
             <div class="col-xs-12 col-sm-12 col-md-8 col-lg-8">
-            <h1 class="display-4">Парковка на ул. Анохина</h1>
-            <p class="lead">сейчас свободно n мест</p>
+            <h1 class="display-4">Парковка на просп. Ленина</h1>
             </div>
         </div>
     </div>
     <div class="jumbotron jumbotron-fluid">
         <div id="loader"></div>
-        <div style="display:none;" id="video"><img src="{{ url_for('video_feed3') }}", style="max-width: 90%; height: auto; border-radius: 10px; box-shadow: 0 0 10px #444;"/></div>
+        <div style="display:none;" id="video"><img src="{{ url_for('video_feed1') }}", style="max-width: 90%; height: auto; border-radius: 10px; box-shadow: 0 0 10px #444;"/></div>
     </div>
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>

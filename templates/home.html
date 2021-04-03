@@ -13,9 +13,9 @@
         	</button>
         	<div class="collapse navbar-collapse justify-content-end" id="navbarNav">
             	<ul class="navbar-nav justify-content-end nav-pills">
-                	<li class="nav-item "><a class="nav-link text-white" href="/stream1">Парковка у ЖД вокзала</a></li>
-                	<li class="nav-item "><a class="nav-link text-white" href="/stream2">Парковка на просп. Ленина</a></li>
-                    <li class="nav-item "><a class="nav-link text-white" href="/stream3">Парковка на ул. Анохина</a></li>
+                	<li class="nav-item "><a class="nav-link text-white" href="/stream1">Парковка на просп. Ленина</a></li>
+									<!--<li class="nav-item "><a class="nav-link text-white" href="/stream2">Парковка у ЖД вокзала</a></li>
+                  <li class="nav-item "><a class="nav-link text-white" href="/stream3">Парковка на ул. Анохина</a></li>-->
                 	<li class="nav-item "><a class="nav-link text-white" href="/upload_video">Загрузить видео</a></li>
             	</ul>
         	</div>
@@ -31,8 +31,38 @@
         	</div>
     	</div>
 	</div>
+	<div id="parkingMap" style="width: 80%; height: 700px"></div>
 	<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+	<script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU" type="text/javascript"></script>
+	<script>
+		var parkUrls = ['{{ park_urls[0] }}']
+		ymaps.ready(init);
+
+		function init() {
+		    var map = new ymaps.Map ('parkingMap', {
+		        center: [61.78,34.35],
+		        zoom: 13
+		    });
+		    var park1 = new ymaps.Placemark([61.7896559,34.3619819], {
+		      iconContent: 'пр. Ленина'
+		    }, {
+		      preset: 'islands#blueStretchyIcon'
+		    });
+		    var park1Polygon = new ymaps.Polygon([[
+		      [61.7895613,34.3617549],
+		      [61.7897365,34.3622872],
+		      [61.7897659,34.3622313],
+		      [61.7895903,34.3616741]
+		    ]]);
+		    map.geoObjects.add(park1);
+		    park1.events.add('click', function(){
+		      window.location.replace(parkUrls[0]);
+		    });
+
+		    map.geoObjects.add(park1Polygon);
+		}
+	</script>
 </body>
 </html>

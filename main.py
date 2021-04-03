@@ -10,16 +10,13 @@ from werkzeug.utils import secure_filename
 from markupsafe import escape
 from threading import Thread
 
-
-stream_url = ["https://s2.moidom-stream.ru/s/public/0000010491.m3u8", "https://s2.moidom-stream.ru/s/public/0000010493.m3u8", "https://s2.moidom-stream.ru/s/public/0000010495.m3u8"]
-stream_url1 = "https://s2.moidom-stream.ru/s/public/0000010493.m3u8"  # парковка у жд вокзала
-stream_url2 = "https://s2.moidom-stream.ru/s/public/0000010491.m3u8"  # парковка на просп. Ленина
-stream_url3 = "https://s2.moidom-stream.ru/s/public/0000010495.m3u8"  # парковка на ул. Анохина
+stream_url = ["rtsp://93.190.206.140:8554/lenina"] #,"rtsp://93.190.206.140:8554/vokzal"]
 video_url = "sources/parking.mp4"
 
 
-frame_read_mode = [False, False, False]
-frames = [None, None, None]
+frame_read_mode = [False] #, False, False]
+frames = [None] #, None, None]
+free_parks = [0] #, 0, 0]
 
 UPLOAD_FOLDER = 'sources/'
 ALLOWED_EXTENSIONS = {'flv', 'avi', 'mkv', 'mp4'}
@@ -31,25 +28,25 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 @app.route('/')
 def start():
     """Home page"""
-    return render_template("home.html")
-
+    park_urls = [url_for('stream1')]
+    return render_template("home.html", park_urls=park_urls)
 
 @app.route('/stream1')
-def main_page():
+def stream1():
     """Livestream of the 1st camera"""
-    return render_template("index.html")
+    return render_template("stream1.html")
 
 
-@app.route('/stream2')
-def main_page2():
-    """Livestream of the 2nd camera"""
-    return render_template("index2.html")
+# @app.route('/stream2')
+# def stream2():
+#     """Livestream of the 2nd camera"""
+#     return render_template("index2.html")
 
 
-@app.route('/stream3')
-def main_page3():
-    """Livestream of the 3nd camera"""
-    return render_template("index3.html")
+# @app.route('/stream3')
+# def stream3():
+#     """Livestream of the 3nd camera"""
+#     return render_template("index3.html")
 
 
 def allowed_file(filename):
@@ -96,7 +93,6 @@ def gen(id):
     if success:
         get_car_boxes(frame) #используем первый кадр, для того, чтобы все нужные библиотеки загрузились до обработки видео
 
-    counter = 0
     while video.isOpened():
             success, frame = video.read()
             if (frame_read_mode[id]) or (not success):
@@ -110,7 +106,7 @@ def gen(id):
             elif video_spf > spf:
                 time.sleep(video_spf - spf)
 
-
+            print('processing')
             rgb_image = frame[:, :, ::-1]
 
             car_boxes = get_car_boxes(rgb_image)
@@ -130,6 +126,7 @@ def gen(id):
                 prev_cars = car_boxes
 
             spaces = find_space(car_boxes, id)
+            free_parks[id] = len(spaces)
 
             for space in spaces:
                 x, y = space
@@ -138,6 +135,7 @@ def gen(id):
             img = cv2.imencode('.jpeg', frame)[1].tobytes()
             frames[id] = img
             frame_read_mode[id] = True
+            print(frames[id])
             #yield (b'--frame\r\n'
             #       b'Content-Type: image/jpeg\r\n\r\n' + img + b'\r\n')
 
@@ -145,6 +143,7 @@ def gen(id):
 
 def get_frame(cam):
     while True:
+        print(frame_read_mode[cam])
         if (frame_read_mode[cam]) and (frames[cam] != None):
             frame_read_mode[cam] = False
             yield (b'--frame\r\n'
@@ -155,23 +154,20 @@ def run_video():
     return Response(gen(), #пока что поддерживаются только видео парковки на просп. Ленина
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
-
-@app.route('/video_feed')
-def video_feed():
-    return Response(get_frame(1),
-                    mimetype='multipart/x-mixed-replace; boundary=frame')
-
-
-@app.route('/video_feed2')
-def video_feed2():
+@app.route('/video_feed1')
+def video_feed1():
     return Response(get_frame(0),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
+# @app.route('/video_feed2')
+# def video_feed2():
+#     return Response(get_frame(1),
+#                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
-@app.route('/video_feed3')
-def video_feed3():
-    return Response(get_frame(2),
-                    mimetype='multipart/x-mixed-replace; boundary=frame')
+# @app.route('/video_feed3')
+# def video_feed3():
+#     return Response(get_frame(2),
+#                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
 execution_path = os.getcwd()
@@ -185,8 +181,7 @@ custom = detector.CustomObjects(bicycle=True, car=True, motorcycle=True, bus=Tru
 
 
 if __name__ == '__main__':
-    for i in range(1):
+    for i in range(1): #Работаем с одной парковкой
         t = Thread(target=gen, args=[i])
         t.start()
-        t.join()
     app.run()
