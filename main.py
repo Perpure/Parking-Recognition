@@ -1,3 +1,6 @@
+from threading import Thread
+DATA_TO_SEND = [1, 0, 0, 1] #id, spaces, frame, flag
+from bot import *
 from imageai.Detection import ObjectDetection
 import numpy as np
 import cv2
@@ -15,8 +18,6 @@ video_url = "sources/parking.mp4"
 
 UPLOAD_FOLDER = 'sources/'
 ALLOWED_EXTENSIONS = {'flv', 'avi', 'mkv', 'mp4'}
-DATA_TO_SEND = [0, 0, 0]
-SEND_FLAG = True
 
 app = Flask('parking-recognition', template_folder="templates")
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -73,6 +74,7 @@ def get_car_boxes(frame):
 
 def gen(VIDEO_SOURCE, PARK):
     """Video streaming function"""
+    global DATA_TO_SEND, SEND_FLA
 
     video_capture = cv2.VideoCapture(VIDEO_SOURCE)
 
@@ -109,7 +111,7 @@ def gen(VIDEO_SOURCE, PARK):
 
         if (len(prev_cars) != 0):
             if (len(car_boxes) != len(prev_cars)):
-                if (change_counter < max(3 / spf, 3)):  #cars updates within 3 sec 
+                if (change_counter < max(3 / spf, 3)):  #cars updates within 3 sec
                     change_counter += 1
                     car_boxes = prev_cars
                 else:
@@ -128,12 +130,13 @@ def gen(VIDEO_SOURCE, PARK):
 
         frame = cv2.resize(frame, (0, 0), fx=0.8, fy=0.8)
         img = cv2.imencode('.jpeg', frame)[1].tobytes()
+        DATA_TO_SEND[2] = img
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + img + b'\r\n')
 
         spf = time.time() - t0
 
-        
+
 @app.route('/process_video')
 def run_video():
     return Response(gen(video_url, 0), #пока что поддерживаются только видео парковки на просп. Ленина
@@ -163,4 +166,8 @@ detector.loadModel()
 custom = detector.CustomObjects(bicycle=True, car=True, motorcycle=True, bus=True, truck=True, boat=True) #объекты, которые должна искать нейронка
 
 if __name__ == '__main__':
-    app.run()
+    for i in range(1): #Работаем с одной парковкой
+        t = Thread(target=gen, args=[i])
+        t.start()
+    t = Thread(target=updater.start_polling, args=[])
+    t.start()
