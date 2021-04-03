@@ -10,7 +10,7 @@ from werkzeug.utils import secure_filename
 from markupsafe import escape
 from threading import Thread
 
-stream_url = ["https://moidom.citylink.pro/pub/10491"] #,"rtsp://93.190.206.140:8554/vokzal"]
+stream_url = ["https://s2.moidom-stream.ru/s/public/0000010491.m3u8"] #,"rtsp://93.190.206.140:8554/vokzal"]
 video_url = "sources/parking.mp4"
 
 
