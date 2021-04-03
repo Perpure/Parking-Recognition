@@ -130,7 +130,7 @@ def gen(id):
 
             if (len(prev_cars) != 0):
                 if (len(car_boxes) != len(prev_cars)):
-                    if (change_counter < max(3 / spf, 3)):  #cars updates within 3 sec
+                    if (change_counter < max(4 / spf, 4)):  #cars updates within 4 sec
                         change_counter += 1
                         car_boxes = prev_cars
                     else:
