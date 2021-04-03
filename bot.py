@@ -2,12 +2,16 @@ from telegram.ext import Updater
 from telegram.ext import CommandHandler
 import logging
 import requests
+import sys
+import os.path
 import telebot
 from threading import Thread
 SEND_FLA = False
 
 TOKEN = "1791644799:AAEdL0bdkPkJWfh2o0f8wvgrofi1cQs2KaY"
 LINK = "t.me/park_ornull_bot"
+PATH = sys.argv[1]
+print(PATH)
 
 updater = Updater(token=TOKEN, use_context=True)
 
@@ -26,13 +30,13 @@ def notify(update, context):
     prev_spaces = 0
     id = 1
     while True:
-        r = requests.get('http://127.0.0.1:5000/get_spaces1')
-        spaces = int(r.text)
-        fr = requests.get('http://127.0.0.1:5000/get_frame1')
+        fr = requests.get(os.path.join(PATH, 'get_frame1'))
         frame = fr.content
         file = open("sample_image.png", "wb")
         file.write(fr.content)
         file.close()
+        r = requests.get(os.path.join(PATH, 'get_spaces1'))
+        spaces = int(r.text)
         if spaces > prev_spaces:
             loc = ''
             if id == 0:
