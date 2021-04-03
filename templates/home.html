@@ -38,15 +38,26 @@
 	<script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU" type="text/javascript"></script>
 	<script>
 		var parkUrls = ['{{ park_urls[0] }}']
+		var spaceUrls = ['{{ space_urls[0] }}']
+		var tags = ['']
 		ymaps.ready(init);
 
 		function init() {
 		    var map = new ymaps.Map ('parkingMap', {
-		        center: [61.78,34.35],
-		        zoom: 13
+		        center: [61.7896559,34.3619819],
+		        zoom: 17
 		    });
+
+				var x = new XMLHttpRequest();
+				x.open("GET", spaceUrls[0], false);
+				x.send()
+				if (x.status == 200) {
+					tags[0] = 'пр. Ленина (' + x.responseText + ')';
+				} else {
+					tags[0] = 'пр. Ленина';
+				}
 		    var park1 = new ymaps.Placemark([61.7896559,34.3619819], {
-		      iconContent: 'пр. Ленина'
+		      iconContent: tags[0],
 		    }, {
 		      preset: 'islands#blueStretchyIcon'
 		    });

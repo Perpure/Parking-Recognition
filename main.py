@@ -29,7 +29,8 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 def start():
     """Home page"""
     park_urls = [url_for('stream1')]
-    return render_template("home.html", park_urls=park_urls)
+    space_urls = [url_for('get_spaces1')]
+    return render_template("home.html", park_urls=park_urls, space_urls=space_urls)
 
 @app.route('/stream1')
 def stream1():
