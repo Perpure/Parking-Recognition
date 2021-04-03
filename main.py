@@ -142,7 +142,6 @@ def gen(id):
                 prev_cars = car_boxes
 
             spaces = find_space(car_boxes, id)
-            free_parks[id] = len(spaces)
 
             for space in spaces:
                 x, y = space
@@ -150,6 +149,7 @@ def gen(id):
 
             img = cv2.imencode('.jpeg', frame)[1].tobytes()
             frames[id] = img
+            free_parks[id] = len(spaces)
             frame_read_mode[id] = True
             spf = time.time() - t0
 
