@@ -133,7 +133,7 @@ def gen(id):
             
             if (len(prev_cars) != 0):
                 if (len(spaces) != len(prev_cars)):
-                    if (change_counter < 3):  #cars updates within 4 sec
+                    if (change_counter < 4):  #cars updates within 4 sec
                         change_counter += 1
                         spaces = prev_cars
                     else:
