@@ -1,4 +1,4 @@
-# Parking-Recognition
+# Hackhaton iVision 2021. 2nd place among juniors.
 
 ## Install python 3.7.x! Newer versions won't work.
 
